@@ -567,4 +567,32 @@ describe Spree::CheckoutController, type: :controller do
       order.reload
     end
   end
+
+  describe '#remove_credit_card' do
+    let(:order) do
+      FactoryBot.create(:order_with_line_items).tap do |order|
+        order.next! until order.state == 'payment'
+      end
+    end
+    let!(:credit_card) do
+      create(:payment, amount: order.total, order: order).source
+    end
+    let!(:credit_card_2) do
+      create(:payment, amount: order.total, order: order).source
+    end
+
+    before do
+      credit_card.update(user_id: user.id)
+      credit_card_2.update(user_id: user.id)
+      allow(controller).to receive_messages current_order: order
+      allow(controller).to receive_messages check_authorization: true
+    end
+
+    it 'removes chosen credit card' do
+      expect(Spree::CreditCard.not_removed.count).to eq(2)
+
+      expect { post :remove_credit_card, params: { credit_card: credit_card_2.id } }.to change { credit_card_2.reload.removed }.from(false).to(true)
+      expect(Spree::CreditCard.not_removed.count).to eq(1)
+    end
+  end
 end

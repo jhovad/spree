@@ -9,6 +9,7 @@ Spree::Core::Engine.add_routes do
   patch '/checkout/update/:state', to: 'checkout#update', as: :update_checkout
   get '/checkout/:state', to: 'checkout#edit', as: :checkout_state
   get '/checkout', to: 'checkout#edit', as: :checkout
+  post '/checkout/remove_credit_card/:credit_card', to: 'checkout#remove_credit_card', as: :remove_credit_card
 
   get '/orders/populate', to: 'orders#populate_redirect'
 

@@ -50,6 +50,21 @@ module Spree
       end
     end
 
+    def remove_credit_card
+      card = try_spree_current_user.credit_cards.find(params[:credit_card])
+
+      ActiveRecord::Base.transaction do
+        card.payments.
+          valid.
+          joins(:order).
+          merge(Spree::Order.incomplete).
+          each(&:invalidate!)
+        card.update(removed: true)
+      end
+
+      redirect_to checkout_state_path(@order.state)
+    end
+
     private
 
     def unknown_state?

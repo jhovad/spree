@@ -210,6 +210,7 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
 
     before do
       create(:credit_card, user_id: user.id, payment_method: bogus, gateway_customer_profile_id: 'BGS-WEFWF')
+      create(:credit_card, last_digits: '4242', user_id: user.id, payment_method: bogus, gateway_customer_profile_id: 'BGS-WEFWG')
 
       order = OrderWalkthrough.up_to(:payment)
       allow(order).to receive_messages(available_payment_methods: [bogus])
@@ -232,6 +233,22 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
 
       expect(page).to have_content(Spree.t(:order_success).gsub(/[[:space:]]+/, ' '))
       expect(page).to have_current_path(spree.order_path(Spree::Order.last))
+    end
+
+    it 'allows user to remove credit card from list' do
+      within '#existing_cards' do
+        expect(page).to have_content '1111'
+        expect(page).to have_content '4242'
+      end
+
+      within '#spree_credit_card_1' do
+        click_on 'remove'
+      end
+
+      within '#existing_cards' do
+        expect(page).not_to have_content '1111'
+        expect(page).to have_content '4242'
+      end
     end
   end
 
